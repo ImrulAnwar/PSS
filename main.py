@@ -1,7 +1,7 @@
-import sys
-
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QRadioButton, QPushButton, QButtonGroup
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QRadioButton, QPushButton, \
+    QScrollArea, QGroupBox
+from PyQt5.QtGui import QFont, QGuiApplication
 
 
 class HealthQuestionnaire(QWidget):
@@ -11,70 +11,171 @@ class HealthQuestionnaire(QWidget):
 
     def initUI(self):
         self.setWindowTitle('Patient Support System')
-        self.setGeometry(100, 100, 500, 500)
+        # Calculate the size and position of the window
+        screen = QGuiApplication.primaryScreen()
+        screen_rect = screen.geometry()
+        width = int(screen_rect.width() * 0.6)
+        height = int(width / 16 * 9)
+        x = int((screen_rect.width() - width) / 2)
+        y = int((screen_rect.height() - height) / 2)
 
-        # Add a vertical layout
-        layout = QVBoxLayout(self)
+        # Set the size and position of the window
+        self.setGeometry(x, y, width, height)
 
-        # Cardiology questions
-        cardiology_label = QLabel('Cardiology (heart disease)', self)
-        layout.addWidget(cardiology_label)
-        question1_group = QButtonGroup(self)
-        chest_pain_label = QLabel('Have you experienced chest pain or discomfort in the past month?', self)
-        layout.addWidget(chest_pain_label)
+        # Create a scroll area widget and set its properties
+        scroll = QScrollArea(self)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
 
-        yes_chest_pain = QRadioButton('Yes', self)
-        layout.addWidget(yes_chest_pain)
-        question1_group.addButton(yes_chest_pain)
-        no_chest_pain = QRadioButton('no', self)
-        layout.addWidget(no_chest_pain)
-        question1_group.addButton(yes_chest_pain)
+        # Create a widget to hold the form contents and set its layout
+        form = QWidget(scroll)
+        layout = QVBoxLayout(form)
+        scroll.setWidget(form)
+        main_layout = QVBoxLayout(self)
+        main_layout.addWidget(scroll, 1)
 
-        family_history_label = QLabel('Do you have a family history of heart disease?', self)
-        layout.addWidget(family_history_label)
+        # List of questions and options
+        questions = [
+            {
+                'question': 'Have you experienced chest pain or discomfort in the past month?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Do you have a family history of heart disease?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with high cholesterol?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced dizziness or headaches in the past month?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Do you have a family history of high blood pressure?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with kidney disease?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Do you experience shortness of breath or wheezing?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with asthma or COPD?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you been exposed to any environmental toxins, such as cigarette smoke or air '
+                            'pollution?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced increased thirst or hunger?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you noticed any changes in your vision?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with gestational diabetes during pregnancy?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced sneezing or a runny nose in the past month?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Do you have a family history of allergies?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever had a severe allergic reaction?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced feelings of sadness or hopelessness in the past month?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with a mental health condition, such as depression or '
+                            'anxiety?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced any changes in sleep or appetite recently?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced pain in any specific areas of your body, such as your back?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you tried any pain management techniques, such as physical therapy or medication?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced any changes in your level of pain in the past month?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced any seizures or convulsions?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with a neurological disorder, such as Parkinson\'s or '
+                            'multiple sclerosis?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced any numbness or tingling sensations?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced any abdominal pain or discomfort?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced any changes in bowel movements or stool consistency?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with a gastrointestinal condition, such as Cron\'s or '
+                            'ulcerative colitis?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you experienced any changes in weight or appetite recently?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you ever been diagnosed with an eating disorder, such as anorexia or bulimia?',
+                'options': ['Yes', 'No']
+            },
+            {
+                'question': 'Have you tried any specific diets or weight loss programs in the past?',
+                'options': ['Yes', 'No']
+            }
+            # Add more questions here...
+        ]
 
-        no_family_history = QRadioButton('No', self)
-        layout.addWidget(no_family_history)
+        for question in questions:
+            group_box = QGroupBox(question['question'])
+            group_box_layout = QVBoxLayout()
 
-        high_cholesterol = QRadioButton('Yes', self)
-        layout.addWidget(high_cholesterol)
+            # Loop over options and create a radio button for each option
+            for option in question['options']:
+                radio_button = QRadioButton(option)
+                group_box_layout.addWidget(radio_button)
 
-        high_cholesterol_label = QLabel('Have you ever been diagnosed with high cholesterol?', self)
-        layout.addWidget(high_cholesterol_label)
-
-        no_high_cholesterol = QRadioButton('No', self)
-        layout.addWidget(no_high_cholesterol)
-
-        # Hypertension questions
-        hypertension_label = QLabel('Hypertension (high blood pressure)', self)
-        layout.addWidget(hypertension_label)
-
-        dizziness = QRadioButton('Yes', self)
-        layout.addWidget(dizziness)
-
-        dizziness_label = QLabel('Have you experienced dizziness or headaches in the past month?', self)
-        layout.addWidget(dizziness_label)
-
-        no_dizziness = QRadioButton('No', self)
-        layout.addWidget(no_dizziness)
-
-        hypertension_family_history = QRadioButton('Yes', self)
-        layout.addWidget(hypertension_family_history)
-
-        hypertension_family_history_label = QLabel('Do you have a family history of high blood pressure?', self)
-        layout.addWidget(hypertension_family_history_label)
-
-        no_hypertension_family_history = QRadioButton('No', self)
-        layout.addWidget(no_hypertension_family_history)
-
-        kidney_disease = QRadioButton('Yes', self)
-        layout.addWidget(kidney_disease)
-
-        kidney_disease_label = QLabel('Have you ever been diagnosed with kidney disease?', self)
-        layout.addWidget(kidney_disease_label)
-
-        no_kidney_disease = QRadioButton('No', self)
-        layout.addWidget(no_kidney_disease)
+            # Add group box to main layout
+            group_box.setLayout(group_box_layout)
+            layout.addWidget(group_box)
 
         # Add a submit button
         submit_button = QPushButton('Submit', self)
@@ -86,6 +187,7 @@ class HealthQuestionnaire(QWidget):
         QApplication.quit()
 
     def submit(self):
+        print("clicked")
         # TODO: Add code to process the questionnaire answers
         pass
 
