@@ -1,15 +1,15 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedLayout
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QRadioButton, QPushButton, \
+from PyQt5.QtWidgets import QRadioButton, QPushButton, \
     QScrollArea, QGroupBox
 from PyQt5.QtGui import QFont, QGuiApplication
 
 
-class HealthQuestionnaire(QWidget):
+class PatientSupportSystem(QWidget):
     def __init__(self):
         super().__init__()
-        self.initUI()
 
-    def initUI(self):
         self.setWindowTitle('Patient Support System')
         # Calculate the size and position of the window
         screen = QGuiApplication.primaryScreen()
@@ -22,18 +22,46 @@ class HealthQuestionnaire(QWidget):
         # Set the size and position of the window
         self.setGeometry(x, y, width, height)
 
+        # Create stacked layout
+        self.stacked_layout = QStackedLayout()
+
+        # Create pages for stacked layout
+        self.welcome_page = QWidget()
+        self.questions_page = QWidget()
+        self.page3 = QWidget()
+
+        # Create widgets for page 1
+        self.label1 = QLabel("This is page 1")
+        self.next_button1 = QPushButton("Next")
+
+        # Create layout for page 1
+        page1_layout = QVBoxLayout()
+        page1_layout.addWidget(self.label1)
+        page1_layout.addWidget(self.next_button1)
+        self.welcome_page.setLayout(page1_layout)
+
+        # Connect next button 1 to switch to page 2
+        self.next_button1.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(1))
+
+        # Create widgets for page 2
+        self.label2 = QLabel("This is page 2")
+        self.next_button2 = QPushButton("Next")
+
         # Create a scroll area widget and set its properties
         scroll = QScrollArea(self)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setWidgetResizable(True)
 
-        # Create a widget to hold the form contents and set its layout
+        # Create layout for page 2
         form = QWidget(scroll)
-        layout = QVBoxLayout(form)
+        scroll_layout = QVBoxLayout(form)
+        page2_layout = QVBoxLayout()
         scroll.setWidget(form)
-        main_layout = QVBoxLayout(self)
-        main_layout.addWidget(scroll, 1)
+        page2_layout.addWidget(scroll, 1)
+        page2_layout.addWidget(self.label2)
+        page2_layout.addWidget(self.next_button2)
+        self.questions_page.setLayout(page2_layout)
 
         # List of questions and options
         questions = [
@@ -175,21 +203,31 @@ class HealthQuestionnaire(QWidget):
 
             # Add group box to main layout
             group_box.setLayout(group_box_layout)
-            layout.addWidget(group_box)
+            scroll_layout.addWidget(group_box)
 
-        # Add a submit button
-        submit_button = QPushButton('Submit', self)
-        layout.addWidget(submit_button)
-        submit_button.clicked.connect(self.submit)
+        # Connect next button 2 to switch to page 3
+        self.next_button2.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(2))
 
-    def closeEvent(self, event):
-        # Stop the event loop when the window is closed
-        QApplication.quit()
+        # Create widgets for page 3
+        self.label3 = QLabel("This is page 3")
+        self.close_button = QPushButton("Close")
 
-    def submit(self):
-        print("clicked")
-        # TODO: Add code to process the questionnaire answers
-        pass
+        # Create layout for page 3
+        page3_layout = QVBoxLayout()
+        page3_layout.addWidget(self.label3)
+        page3_layout.addWidget(self.close_button)
+        self.page3.setLayout(page3_layout)
+
+        # Connect close button to close the application
+        self.close_button.clicked.connect(self.close)
+
+        # Add pages to stacked layout
+        self.stacked_layout.addWidget(self.welcome_page)
+        self.stacked_layout.addWidget(self.questions_page)
+        self.stacked_layout.addWidget(self.page3)
+
+        # Set layout for widget
+        self.setLayout(self.stacked_layout)
 
 
 if __name__ == '__main__':
@@ -198,6 +236,6 @@ if __name__ == '__main__':
     app = QApplication([])
     # Set the default font of the application
     app.setFont(font)
-    questionnaire = HealthQuestionnaire()
+    questionnaire = PatientSupportSystem()
     questionnaire.show()
     app.exec_()
