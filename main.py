@@ -192,6 +192,20 @@ class PatientSupportSystem(QWidget):
             # Add more questions here...
         ]
 
+        # medical specialties
+        medical_specialties = {
+            "heart disease": "Cardiology",
+            "high blood pressure": "Hypertension",
+            "lung disease": "Pulmonology",
+            "diabetes": "Endocrinology",
+            "allergies": "Allergy and immunology",
+            "mental health": "Psychiatry",
+            "chronic pain": "Pain management",
+            "neurological disorders": "Neurology",
+            "gastrointestinal problems": "Gastroenterology",
+            "weight or appetite changes": "Nutrition and weight management"
+        }
+
         for question in questions:
             group_box = QGroupBox(question['question'])
             group_box_layout = QVBoxLayout()
