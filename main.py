@@ -193,7 +193,7 @@ class PatientSupportSystem(QWidget):
         ]
 
         # medical specialties
-        medical_specialties = {
+        self.medical_specialties = {
             "heart disease": "Cardiology",
             "high blood pressure": "Hypertension",
             "lung disease": "Pulmonology",
@@ -206,7 +206,7 @@ class PatientSupportSystem(QWidget):
             "weight or appetite changes": "Nutrition and weight management"
         }
 
-        scores = {
+        self.scores = {
             "Cardiology": 0,
             "Hypertension": 0,
             "Pulmonology": 0,
@@ -218,6 +218,19 @@ class PatientSupportSystem(QWidget):
             "Gastroenterology": 0,
             "Nutrition and weight management": 0
         }
+
+        self.specializations = [
+            'Cardiology',
+            'Hypertension',
+            'Pulmonology',
+            'Endocrinology',
+            'Allergy and immunology',
+            'Psychiatry',
+            'Pain management',
+            'Neurology',
+            'Gastroenterology',
+            'Nutrition and weight management'
+        ]
 
         # Create an empty list to store the radio buttons
         self.radio_buttons = []
@@ -264,14 +277,13 @@ class PatientSupportSystem(QWidget):
         # Set layout for widget
         self.setLayout(self.stacked_layout)
 
-        # create a message box with an information icon and a OK button
+        # create a message box with an information icon and an OK button
         self.msg = QMessageBox()
         self.msg.setIcon(QMessageBox.Information)
         self.msg.setText("Please answer each question!")
         self.msg.setStandardButtons(QMessageBox.Ok)
 
     def on_submit_button_clicked(self):
-        ct = 0
         multiplier = 10
         answers = []
         for i in range(0, len(self.radio_buttons) - 1, 2):
@@ -284,8 +296,15 @@ class PatientSupportSystem(QWidget):
                 answers.append(rb1.text())
             elif rb2.isChecked():
                 answers.append(rb2.text())
-
-
+        for i, ans in enumerate(answers):
+            curr_index = int(i / 3)
+            if ans == "Yes":
+                self.scores[self.specializations[curr_index]] += multiplier
+            if (i+1) % 3 == 0:
+                multiplier -= 1
+        probable_disease = max(self.scores, key=self.scores.get)
+        print(probable_disease)
+        # call the query now
         self.stacked_layout.setCurrentIndex(2)
 
 
