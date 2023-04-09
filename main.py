@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QRadioButton, QPushButton, \
-    QScrollArea, QGroupBox
+    QScrollArea, QGroupBox, QMessageBox
 from PyQt5.QtGui import QFont, QGuiApplication
 
 
@@ -44,8 +44,8 @@ class PatientSupportSystem(QWidget):
         self.next_button1.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(1))
 
         # Create widgets for page 2
-        self.label2 = QLabel("This is page 2")
-        self.next_button2 = QPushButton("Next")
+        self.label2 = QLabel("Please Answer the following questions: ")
+        self.submit_button = QPushButton("Submit")
 
         # Create a scroll area widget and set its properties
         scroll = QScrollArea(self)
@@ -58,9 +58,9 @@ class PatientSupportSystem(QWidget):
         scroll_layout = QVBoxLayout(form)
         page2_layout = QVBoxLayout()
         scroll.setWidget(form)
-        page2_layout.addWidget(scroll, 1)
         page2_layout.addWidget(self.label2)
-        page2_layout.addWidget(self.next_button2)
+        page2_layout.addWidget(scroll, 1)
+        page2_layout.addWidget(self.submit_button)
         self.questions_page.setLayout(page2_layout)
 
         # List of questions and options
@@ -206,21 +206,42 @@ class PatientSupportSystem(QWidget):
             "weight or appetite changes": "Nutrition and weight management"
         }
 
+        scores = {
+            "Cardiology": 0,
+            "Hypertension": 0,
+            "Pulmonology": 0,
+            "Endocrinology": 0,
+            "Allergy and immunology": 0,
+            "Psychiatry": 0,
+            "Pain management": 0,
+            "Neurology": 0,
+            "Gastroenterology": 0,
+            "Nutrition and weight management": 0
+        }
+
+        # Create an empty list to store the radio buttons
+        self.radio_buttons = []
+        ct = 0
+
         for question in questions:
             group_box = QGroupBox(question['question'])
             group_box_layout = QVBoxLayout()
 
             # Loop over options and create a radio button for each option
             for option in question['options']:
+                ct += 1
                 radio_button = QRadioButton(option)
+                radio_button.setObjectName("RB" + str(ct))
                 group_box_layout.addWidget(radio_button)
+                # Add the radio button to the list
+                self.radio_buttons.append(radio_button)
 
             # Add group box to main layout
             group_box.setLayout(group_box_layout)
             scroll_layout.addWidget(group_box)
 
         # Connect next button 2 to switch to page 3
-        self.next_button2.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(2))
+        self.submit_button.clicked.connect(self.on_submit_button_clicked)
 
         # Create widgets for page 3
         self.label3 = QLabel("This is page 3")
@@ -242,6 +263,30 @@ class PatientSupportSystem(QWidget):
 
         # Set layout for widget
         self.setLayout(self.stacked_layout)
+
+        # create a message box with an information icon and a OK button
+        self.msg = QMessageBox()
+        self.msg.setIcon(QMessageBox.Information)
+        self.msg.setText("Please answer each question!")
+        self.msg.setStandardButtons(QMessageBox.Ok)
+
+    def on_submit_button_clicked(self):
+        ct = 0
+        multiplier = 10
+        answers = []
+        for i in range(0, len(self.radio_buttons) - 1, 2):
+            rb1 = self.radio_buttons[i]
+            rb2 = self.radio_buttons[i + 1]
+            if (not rb1.isChecked()) and (not rb2.isChecked()):
+                self.msg.exec_()
+                return
+            if rb1.isChecked():
+                answers.append(rb1.text())
+            elif rb2.isChecked():
+                answers.append(rb2.text())
+
+
+        self.stacked_layout.setCurrentIndex(2)
 
 
 if __name__ == '__main__':
