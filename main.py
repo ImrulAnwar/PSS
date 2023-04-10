@@ -283,27 +283,36 @@ class PatientSupportSystem(QWidget):
         self.msg.setText("Please answer each question!")
         self.msg.setStandardButtons(QMessageBox.Ok)
 
-    def on_submit_button_clicked(self):
-        multiplier = 10
+    def get_selected_answers(self):
         answers = []
         for i in range(0, len(self.radio_buttons) - 1, 2):
             rb1 = self.radio_buttons[i]
             rb2 = self.radio_buttons[i + 1]
             if (not rb1.isChecked()) and (not rb2.isChecked()):
-                self.msg.exec_()
-                return
+                return []
             if rb1.isChecked():
                 answers.append(rb1.text())
             elif rb2.isChecked():
                 answers.append(rb2.text())
+        return answers
+
+    def update_scores(self, answers):
+        multiplier = 10
         for i, ans in enumerate(answers):
             curr_index = int(i / 3)
             if ans == "Yes":
                 self.scores[self.specializations[curr_index]] += multiplier
-            if (i+1) % 3 == 0:
+            if (i + 1) % 3 == 0:
                 multiplier -= 1
+
+    def on_submit_button_clicked(self):
+        answers = self.get_selected_answers()
+        # if all the questions aren't answered you can not submit
+        if len(answers) != len(self.radio_buttons) / 2:
+            self.msg.exec_()
+            return
+        self.update_scores(answers)
         probable_disease = max(self.scores, key=self.scores.get)
-        print(probable_disease)
         # call the query now
         self.stacked_layout.setCurrentIndex(2)
 
