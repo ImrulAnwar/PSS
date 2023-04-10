@@ -1,70 +1,18 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedLayout, \
+    QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QRadioButton, QPushButton, \
     QScrollArea, QGroupBox, QMessageBox
 from PyQt5.QtGui import QFont, QGuiApplication
+import sqlite3
 
 
 class PatientSupportSystem(QWidget):
+
     def __init__(self):
         super().__init__()
-
-        self.setWindowTitle('Patient Support System')
-        # Calculate the size and position of the window
-        screen = QGuiApplication.primaryScreen()
-        screen_rect = screen.geometry()
-        width = int(screen_rect.width() * 0.6)
-        height = int(width / 16 * 9)
-        x = int((screen_rect.width() - width) / 2)
-        y = int((screen_rect.height() - height) / 2)
-
-        # Set the size and position of the window
-        self.setGeometry(x, y, width, height)
-
-        # Create stacked layout
-        self.stacked_layout = QStackedLayout()
-
-        # Create pages for stacked layout
-        self.welcome_page = QWidget()
-        self.questions_page = QWidget()
-        self.page3 = QWidget()
-
-        # Create widgets for page 1
-        self.label1 = QLabel("This is page 1")
-        self.next_button1 = QPushButton("Next")
-
-        # Create layout for page 1
-        page1_layout = QVBoxLayout()
-        page1_layout.addWidget(self.label1)
-        page1_layout.addWidget(self.next_button1)
-        self.welcome_page.setLayout(page1_layout)
-
-        # Connect next button 1 to switch to page 2
-        self.next_button1.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(1))
-
-        # Create widgets for page 2
-        self.label2 = QLabel("Please Answer the following questions: ")
-        self.submit_button = QPushButton("Submit")
-
-        # Create a scroll area widget and set its properties
-        scroll = QScrollArea(self)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(True)
-
-        # Create layout for page 2
-        form = QWidget(scroll)
-        scroll_layout = QVBoxLayout(form)
-        page2_layout = QVBoxLayout()
-        scroll.setWidget(form)
-        page2_layout.addWidget(self.label2)
-        page2_layout.addWidget(scroll, 1)
-        page2_layout.addWidget(self.submit_button)
-        self.questions_page.setLayout(page2_layout)
-
-        # List of questions and options
-        questions = [
+        self.questions = [
             {
                 'question': 'Have you experienced chest pain or discomfort in the past month?',
                 'options': ['Yes', 'No']
@@ -191,8 +139,6 @@ class PatientSupportSystem(QWidget):
             }
             # Add more questions here...
         ]
-
-        # medical specialties
         self.medical_specialties = {
             "heart disease": "Cardiology",
             "high blood pressure": "Hypertension",
@@ -205,7 +151,6 @@ class PatientSupportSystem(QWidget):
             "gastrointestinal problems": "Gastroenterology",
             "weight or appetite changes": "Nutrition and weight management"
         }
-
         self.scores = {
             "Cardiology": 0,
             "Hypertension": 0,
@@ -218,7 +163,6 @@ class PatientSupportSystem(QWidget):
             "Gastroenterology": 0,
             "Nutrition and weight management": 0
         }
-
         self.specializations = [
             'Cardiology',
             'Hypertension',
@@ -232,11 +176,63 @@ class PatientSupportSystem(QWidget):
             'Nutrition and weight management'
         ]
 
+        self.setWindowTitle('Patient Support System')
+        # Calculate the size and position of the window
+        screen = QGuiApplication.primaryScreen()
+        screen_rect = screen.geometry()
+        width = int(screen_rect.width() * 0.6)
+        height = int(width / 16 * 9)
+        x = int((screen_rect.width() - width) / 2)
+        y = int((screen_rect.height() - height) / 2)
+
+        # Set the size and position of the window
+        self.setGeometry(x, y, width, height)
+
+        # Create stacked layout
+        self.stacked_layout = QStackedLayout()
+        # Create pages for stacked layout
+        self.patient_form_page = QWidget()
+        self.questions_page = QWidget()
+        self.suggestions_page = QWidget()
+
+        # Create widgets for page 1
+        self.label1 = QLabel("This is page 1")
+        self.next_button1 = QPushButton("Next")
+
+        # Create layout for page 1
+        patient_form_layout = QVBoxLayout()
+        patient_form_layout.addWidget(self.label1)
+        patient_form_layout.addWidget(self.next_button1)
+        self.patient_form_page.setLayout(patient_form_layout)
+
+        # Connect next button 1 to switch to page 2
+        self.next_button1.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(1))
+
+        # Create widgets for page 2
+        self.label2 = QLabel("Please Answer the following questions: ")
+        self.submit_button = QPushButton("Submit")
+
+        # Create a scroll area widget and set its properties
+        scroll = QScrollArea(self)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
+
+        # Create layout for page 2
+        form = QWidget(scroll)
+        scroll_layout = QVBoxLayout(form)
+        page2_layout = QVBoxLayout()
+        scroll.setWidget(form)
+        page2_layout.addWidget(self.label2)
+        page2_layout.addWidget(scroll, 1)
+        page2_layout.addWidget(self.submit_button)
+        self.questions_page.setLayout(page2_layout)
+
         # Create an empty list to store the radio buttons
         self.radio_buttons = []
         ct = 0
 
-        for question in questions:
+        for question in self.questions:
             group_box = QGroupBox(question['question'])
             group_box_layout = QVBoxLayout()
 
@@ -259,20 +255,22 @@ class PatientSupportSystem(QWidget):
         # Create widgets for page 3
         self.label3 = QLabel("This is page 3")
         self.close_button = QPushButton("Close")
+        self.table_widget = QTableWidget()
 
         # Create layout for page 3
-        page3_layout = QVBoxLayout()
-        page3_layout.addWidget(self.label3)
-        page3_layout.addWidget(self.close_button)
-        self.page3.setLayout(page3_layout)
+        self.table_page_layout = QVBoxLayout()
+        self.table_page_layout.addWidget(self.label3)
+        self.table_page_layout.addWidget(self.table_widget)
+        self.table_page_layout.addWidget(self.close_button)
+        self.suggestions_page.setLayout(self.table_page_layout)
 
         # Connect close button to close the application
         self.close_button.clicked.connect(self.close)
 
         # Add pages to stacked layout
-        self.stacked_layout.addWidget(self.welcome_page)
+        self.stacked_layout.addWidget(self.patient_form_page)
         self.stacked_layout.addWidget(self.questions_page)
-        self.stacked_layout.addWidget(self.page3)
+        self.stacked_layout.addWidget(self.suggestions_page)
 
         # Set layout for widget
         self.setLayout(self.stacked_layout)
@@ -282,6 +280,40 @@ class PatientSupportSystem(QWidget):
         self.msg.setIcon(QMessageBox.Information)
         self.msg.setText("Please answer each question!")
         self.msg.setStandardButtons(QMessageBox.Ok)
+
+    def on_submit_button_clicked(self):
+        answers = self.get_selected_answers()
+        # if all the questions aren't answered you can not submit
+        if len(answers) != len(self.radio_buttons) / 2:
+            self.msg.exec_()
+            return
+        self.update_scores(answers)
+        probable_disease = max(self.scores, key=self.scores.get)
+        # call the query now
+        self.show_the_doctors(probable_disease)
+        self.stacked_layout.setCurrentIndex(2)
+
+    def show_the_doctors(self, probable_disease):
+        conn = sqlite3.connect('PSS.db')
+        cursor = conn.cursor()
+
+        sql_command = "SELECT * FROM doctors WHERE specialization = '" + probable_disease + "';"
+
+        # Get the query results as a list of rows
+        rows = cursor.execute(sql_command).fetchall()
+        conn.commit()
+        conn.close()
+        # Set the number of rows and columns in the table
+        self.table_widget.setRowCount(len(rows))
+        self.table_widget.setColumnCount(len(rows[0]))
+
+        # Populate the table with the query results
+        for i, row in enumerate(rows):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem(str(value))
+                self.table_widget.setItem(i, j, item)
+        # Show the table widget
+        self.table_widget.show()
 
     def get_selected_answers(self):
         answers = []
@@ -304,17 +336,6 @@ class PatientSupportSystem(QWidget):
                 self.scores[self.specializations[curr_index]] += multiplier
             if (i + 1) % 3 == 0:
                 multiplier -= 1
-
-    def on_submit_button_clicked(self):
-        answers = self.get_selected_answers()
-        # if all the questions aren't answered you can not submit
-        if len(answers) != len(self.radio_buttons) / 2:
-            self.msg.exec_()
-            return
-        self.update_scores(answers)
-        probable_disease = max(self.scores, key=self.scores.get)
-        # call the query now
-        self.stacked_layout.setCurrentIndex(2)
 
 
 if __name__ == '__main__':
