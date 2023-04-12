@@ -8,6 +8,14 @@ from PyQt5.QtGui import QFont, QGuiApplication
 import sqlite3
 
 
+def show_message():
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+    msg.setText("Please answer each question!")
+    msg.setStandardButtons(QMessageBox.Ok)
+    msg.exec_()
+
+
 class PatientSupportSystem(QWidget):
 
     def __init__(self):
@@ -194,6 +202,7 @@ class PatientSupportSystem(QWidget):
         self.patient_form_page = QWidget()
         self.questions_page = QWidget()
         self.suggestions_page = QWidget()
+        self.prescriptions_page = QWidget()
 
         # Create widgets for page 1
         self.label1 = QLabel("This is page 1")
@@ -229,7 +238,8 @@ class PatientSupportSystem(QWidget):
         self.questions_page.setLayout(page2_layout)
 
         # Create an empty list to store the radio buttons
-        self.radio_buttons = []
+        self.radio_buttons_questions = []
+        self.radio_buttons_doctors = []
         ct = 0
 
         for question in self.questions:
@@ -243,7 +253,7 @@ class PatientSupportSystem(QWidget):
                 radio_button.setObjectName("RB" + str(ct))
                 group_box_layout.addWidget(radio_button)
                 # Add the radio button to the list
-                self.radio_buttons.append(radio_button)
+                self.radio_buttons_questions.append(radio_button)
 
             # Add group box to main layout
             group_box.setLayout(group_box_layout)
@@ -254,18 +264,21 @@ class PatientSupportSystem(QWidget):
 
         # Create widgets for page 3
         self.label3 = QLabel("This is page 3")
-        self.close_button = QPushButton("Close")
+        self.choose_doctor_label = QLabel("Choose a doctor you want to visit: ")
+        self.choose_button = QPushButton("Choose")
         self.table_widget = QTableWidget()
+
+        scroll_layout_for_doctors = QVBoxLayout(form)
 
         # Create layout for page 3
         self.table_page_layout = QVBoxLayout()
         self.table_page_layout.addWidget(self.label3)
         self.table_page_layout.addWidget(self.table_widget)
-        self.table_page_layout.addWidget(self.close_button)
+        self.table_page_layout.addWidget(self.choose_doctor_label)
         self.suggestions_page.setLayout(self.table_page_layout)
 
         # Connect close button to close the application
-        self.close_button.clicked.connect(self.close)
+        self.choose_button.clicked.connect(self.close)
 
         # Add pages to stacked layout
         self.stacked_layout.addWidget(self.patient_form_page)
@@ -275,30 +288,23 @@ class PatientSupportSystem(QWidget):
         # Set layout for widget
         self.setLayout(self.stacked_layout)
 
-        # create a message box with an information icon and an OK button
-        self.msg = QMessageBox()
-        self.msg.setIcon(QMessageBox.Information)
-        self.msg.setText("Please answer each question!")
-        self.msg.setStandardButtons(QMessageBox.Ok)
+    def get_selected_answers(self):
+        answers = []
+        for i in range(0, len(self.radio_buttons_questions) - 1, 2):
+            rb1 = self.radio_buttons_questions[i]
+            rb2 = self.radio_buttons_questions[i + 1]
+            if (not rb1.isChecked()) and (not rb2.isChecked()):
+                return []
+            if rb1.isChecked():
+                answers.append(rb1.text())
+            elif rb2.isChecked():
+                answers.append(rb2.text())
+        return answers
 
-    def on_submit_button_clicked(self):
-        answers = self.get_selected_answers()
-        # if all the questions aren't answered you can not submit
-        if len(answers) != len(self.radio_buttons) / 2:
-            self.msg.exec_()
-            return
-        self.update_scores(answers)
-        probable_disease = max(self.scores, key=self.scores.get)
-        # call the query now
-        self.show_the_doctors(probable_disease)
-        self.stacked_layout.setCurrentIndex(2)
-
-    def show_the_doctors(self, probable_disease):
+    def show_the_doctors_table(self, probable_disease):
         conn = sqlite3.connect('PSS.db')
         cursor = conn.cursor()
-
         sql_command = "SELECT * FROM doctors WHERE specialization = '" + probable_disease + "';"
-
         # Get the query results as a list of rows
         rows = cursor.execute(sql_command).fetchall()
         conn.commit()
@@ -307,26 +313,36 @@ class PatientSupportSystem(QWidget):
         self.table_widget.setRowCount(len(rows))
         self.table_widget.setColumnCount(len(rows[0]))
 
+        # Set the column headers
+        headers = [description[0] for description in cursor.description]
+        self.table_widget.setHorizontalHeaderLabels(headers)
+
         # Populate the table with the query results
         for i, row in enumerate(rows):
             for j, value in enumerate(row):
                 item = QTableWidgetItem(str(value))
                 self.table_widget.setItem(i, j, item)
+        # Resize columns and rows to fit the contents
+        self.table_widget.resizeColumnsToContents()
+        self.table_widget.resizeRowsToContents()
         # Show the table widget
         self.table_widget.show()
 
-    def get_selected_answers(self):
-        answers = []
-        for i in range(0, len(self.radio_buttons) - 1, 2):
-            rb1 = self.radio_buttons[i]
-            rb2 = self.radio_buttons[i + 1]
-            if (not rb1.isChecked()) and (not rb2.isChecked()):
-                return []
-            if rb1.isChecked():
-                answers.append(rb1.text())
-            elif rb2.isChecked():
-                answers.append(rb2.text())
-        return answers
+    def show_doctor_names(self, probable_disease):
+        conn = sqlite3.connect('PSS.db')
+        cursor = conn.cursor()
+        sql_command = "SELECT name FROM doctors WHERE specialization = '" + probable_disease + "';"
+        # Get the query results as a list of rows
+        doctor_names = cursor.execute(sql_command).fetchall()
+        conn.commit()
+        conn.close()
+
+        # Create a radio button for each doctor name and add it to the layout
+        for name in doctor_names:
+            radio_button = QRadioButton(name[0])
+            self.table_page_layout.addWidget(radio_button)
+            self.radio_buttons_doctors.append(radio_button)
+        self.table_page_layout.addWidget(self.choose_button)
 
     def update_scores(self, answers):
         multiplier = 10
@@ -337,10 +353,23 @@ class PatientSupportSystem(QWidget):
             if (i + 1) % 3 == 0:
                 multiplier -= 1
 
+    def on_submit_button_clicked(self):
+        answers = self.get_selected_answers()
+        # if all the questions aren't answered you can not submit
+        if len(answers) != len(self.radio_buttons_questions) / 2:
+            show_message()
+            return
+        self.update_scores(answers)
+        probable_disease = max(self.scores, key=self.scores.get)
+        # call the query now
+        self.show_the_doctors_table(probable_disease)
+        self.show_doctor_names(probable_disease)
+        self.stacked_layout.setCurrentIndex(2)
+
 
 if __name__ == '__main__':
     # Create a QFont object with the desired font family, size and weight
-    font = QFont('Verdana', 12, QFont.Normal)
+    font = QFont('Comic Sans MS', 12, QFont.Normal)
     app = QApplication([])
     # Set the default font of the application
     app.setFont(font)
