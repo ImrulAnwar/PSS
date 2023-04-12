@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QRadioButton, QPushButton, \
     QScrollArea, QGroupBox, QMessageBox
 from PyQt5.QtGui import QFont, QGuiApplication
 import sqlite3
+from datetime import datetime
 
 
 def show_message(msg_txt):
@@ -465,14 +466,46 @@ class PatientSupportSystem(QWidget):
 
         # add patient to the patient table
         self.add_patient_to_the_database(selected_doctor)
-
-        # generate an id for prescriptions table
-        # make the prescription text
-        # get to days date
-        # add that prescription to the table
+        # add prescription to the patient table
+        self.add_prescription_to_the_table()
         # show all 3 table
         # show the prescription text
         self.stacked_layout.setCurrentIndex(3)
+
+    def add_prescription_to_the_table(self):
+        prescriptions = {
+            "Cardiology": "Take aspirin daily to reduce risk of heart attack.",
+            "Hypertension": "Limit salt intake and exercise regularly to control blood pressure.",
+            "Pulmonology": "Use an inhaler as directed to manage symptoms of asthma.",
+            "Endocrinology": "Monitor blood sugar levels and take medication as prescribed to manage diabetes.",
+            "Allergy and immunology": "Avoid allergens and take antihistamines as needed to manage allergies.",
+            "Psychiatry": "Attend therapy sessions and take medication as prescribed to manage mental health.",
+            "Pain management": "Use non-opioid pain relievers and participate in physical therapy to manage chronic "
+                               "pain.",
+            "Neurology": "Take medication as prescribed and attend therapy sessions to manage neurological disorders.",
+            "Gastroenterology": "Avoid trigger foods and take medication as prescribed to manage gastrointestinal "
+                                "problems.",
+            "Nutrition and weight management": "Eat a balanced diet and exercise regularly to manage weight and "
+                                               "appetite changes."
+        }
+        patient_id = self.patient_details[0]
+        doctor_id = self.patient_details[8]
+        prescription_id = patient_id + doctor_id
+        probable_disease = self.patient_details[7]
+        prescription_text = prescriptions[probable_disease]
+        now = datetime.now()
+        date_prescribed = now.strftime("%Y-%m-%d")
+        # connect to the database and create a cursor object
+        conn = sqlite3.connect('your_database_name.db')
+        cursor = conn.cursor()
+
+        # insert the values into the prescription table
+        sql_command = f"INSERT INTO prescriptions (id, patient_id, doctor_id, prescription_text, date_prescribed) " \
+                      f"VALUES ({prescription_id}, {patient_id}, {doctor_id}, '{prescription_text}', '{date_prescribed}');"
+        # cursor.execute(sql_command)
+        print(sql_command)
+        conn.commit()
+        conn.close()
 
     def add_patient_to_the_database(self, selected_doctor):
         # add patient id, probable disease, assigned doctor
@@ -490,8 +523,13 @@ class PatientSupportSystem(QWidget):
         assigned_doctor = self.patient_details[8]
         sql_command = "INSERT INTO patients (id, name, age, gender, email, phone, address, probable_disease, " \
                       "assigned_doctor) VALUES ('{}', '{}', '{}', '{}', '{}','{}', '{}', '{}', '{}');".format(
-                        patient_id, patient_name, patient_age, patient_gender, patient_email, patient_phone_number,
-                        patient_address, probable_disease, assigned_doctor)
+            patient_id, patient_name, patient_age, patient_gender, patient_email, patient_phone_number,
+            patient_address, probable_disease, assigned_doctor)
+        conn = sqlite3.connect('your_database_name.db')
+        cursor = conn.cursor()
+        # cursor.execute(sql_command)
+        conn.commit()
+        conn.close()
         print(sql_command)
 
     def get_the_doctor_id(self, selected_doctor):
