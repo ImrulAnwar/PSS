@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedLayout, \
-    QTableWidget, QTableWidgetItem
+    QTableWidget, QTableWidgetItem, QLineEdit
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QRadioButton, QPushButton, \
     QScrollArea, QGroupBox, QMessageBox
@@ -20,6 +20,7 @@ class PatientSupportSystem(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.patient_details = None
         self.questions = [
             {
                 'question': 'Have you experienced chest pain or discomfort in the past month?',
@@ -207,15 +208,45 @@ class PatientSupportSystem(QWidget):
         # Create widgets for page 1
         self.label1 = QLabel("This is page 1")
         self.next_button1 = QPushButton("Next")
+        # Create labels and text entry boxes
+        self.nameLabel = QLabel('Name:')
+        self.nameLineEdit = QLineEdit()
+
+        self.ageLabel = QLabel('Age:')
+        self.ageLineEdit = QLineEdit()
+
+        self.genderLabel = QLabel('Gender:')
+        self.genderLineEdit = QLineEdit()
+
+        self.emailLabel = QLabel('Email:')
+        self.emailLineEdit = QLineEdit()
+
+        self.phoneLabel = QLabel('Phone No:')
+        self.phoneLineEdit = QLineEdit()
+
+        self.addressLabel = QLabel('Address:')
+        self.addressLineEdit = QLineEdit()
 
         # Create layout for page 1
         patient_form_layout = QVBoxLayout()
         patient_form_layout.addWidget(self.label1)
+        patient_form_layout.addWidget(self.nameLabel)
+        patient_form_layout.addWidget(self.nameLineEdit)
+        patient_form_layout.addWidget(self.ageLabel)
+        patient_form_layout.addWidget(self.ageLineEdit)
+        patient_form_layout.addWidget(self.genderLabel)
+        patient_form_layout.addWidget(self.genderLineEdit)
+        patient_form_layout.addWidget(self.emailLabel)
+        patient_form_layout.addWidget(self.emailLineEdit)
+        patient_form_layout.addWidget(self.phoneLabel)
+        patient_form_layout.addWidget(self.phoneLineEdit)
+        patient_form_layout.addWidget(self.addressLabel)
+        patient_form_layout.addWidget(self.addressLineEdit)
         patient_form_layout.addWidget(self.next_button1)
         self.patient_form_page.setLayout(patient_form_layout)
 
         # Connect next button 1 to switch to page 2
-        self.next_button1.clicked.connect(lambda: self.stacked_layout.setCurrentIndex(1))
+        self.next_button1.clicked.connect(self.on_next_button_clicked)
 
         # Create widgets for page 2
         self.label2 = QLabel("Please Answer the following questions: ")
@@ -278,12 +309,13 @@ class PatientSupportSystem(QWidget):
         self.suggestions_page.setLayout(self.table_page_layout)
 
         # Connect close button to close the application
-        self.choose_button.clicked.connect(self.close)
+        self.choose_button.clicked.connect(self.on_choose_button_clicked)
 
         # Add pages to stacked layout
         self.stacked_layout.addWidget(self.patient_form_page)
         self.stacked_layout.addWidget(self.questions_page)
         self.stacked_layout.addWidget(self.suggestions_page)
+        self.stacked_layout.addWidget(self.prescriptions_page)
 
         # Set layout for widget
         self.setLayout(self.stacked_layout)
@@ -365,6 +397,17 @@ class PatientSupportSystem(QWidget):
         self.show_the_doctors_table(probable_disease)
         self.show_doctor_names(probable_disease)
         self.stacked_layout.setCurrentIndex(2)
+
+    def on_next_button_clicked(self):
+        self.stacked_layout.setCurrentIndex(1)
+        # Retrieve the entries from the text boxes and store them in an array
+        self.patient_details = [self.phoneLineEdit.text(), self.nameLineEdit.text(), self.ageLineEdit.text(),
+                                self.genderLineEdit.text(), self.emailLineEdit.text(), self.phoneLineEdit.text(),
+                                self.addressLineEdit.text()]
+        print(self.patient_details)
+
+    def on_choose_button_clicked(self):
+        self.stacked_layout.setCurrentIndex(3)
 
 
 if __name__ == '__main__':
