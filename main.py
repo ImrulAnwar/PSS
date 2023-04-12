@@ -8,10 +8,10 @@ from PyQt5.QtGui import QFont, QGuiApplication
 import sqlite3
 
 
-def show_message():
+def show_message(msg_txt):
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
-    msg.setText("Please answer each question!")
+    msg.setText(msg_txt)
     msg.setStandardButtons(QMessageBox.Ok)
     msg.exec_()
 
@@ -406,10 +406,10 @@ class PatientSupportSystem(QWidget):
         # Show the table widget
         self.table_widget.show()
 
-    def show_doctor_names(self, probable_disease):
+    def show_doctor_names(self):
         conn = sqlite3.connect('PSS.db')
         cursor = conn.cursor()
-        sql_command = "SELECT name FROM doctors WHERE specialization = '" + probable_disease + "';"
+        sql_command = "SELECT name FROM doctors WHERE specialization = '" + self.probable_disease + "';"
         # Get the query results as a list of rows
         doctor_names = cursor.execute(sql_command).fetchall()
         conn.commit()
@@ -435,13 +435,13 @@ class PatientSupportSystem(QWidget):
         answers = self.get_selected_answers()
         # if all the questions aren't answered you can not submit
         if len(answers) != len(self.radio_buttons_questions) / 2:
-            show_message()
+            show_message("Please answer each question!")
             return
         self.update_scores(answers)
-        probable_disease = max(self.scores, key=self.scores.get)
+        self.probable_disease = max(self.scores, key=self.scores.get)
         # call the query now
-        self.show_the_doctors_table(probable_disease)
-        self.show_doctor_names(probable_disease)
+        self.show_the_doctors_table(self.probable_disease)
+        self.show_doctor_names()
         self.stacked_layout.setCurrentIndex(2)
 
     def on_next_button_clicked(self):
@@ -452,8 +452,20 @@ class PatientSupportSystem(QWidget):
                                 self.addressLineEdit.text()]
 
     def on_choose_button_clicked(self):
-        # add patient id, probable disease, assigned doctor
-        # add that patient to the patient table
+        # select what he chose
+        selected_doctor = None
+        for rb in self.radio_buttons_doctors:
+            if rb.isChecked():
+                selected_doctor = rb.text()
+                break
+
+        if selected_doctor is None:
+            show_message("Please choose a Doctor!")
+            return
+
+        # add patient to the patient table
+        self.add_patient_to_the_database(selected_doctor)
+
         # generate an id for prescriptions table
         # make the prescription text
         # get to days date
@@ -461,6 +473,41 @@ class PatientSupportSystem(QWidget):
         # show all 3 table
         # show the prescription text
         self.stacked_layout.setCurrentIndex(3)
+
+    def add_patient_to_the_database(self, selected_doctor):
+        # add patient id, probable disease, assigned doctor
+        self.patient_details.append(self.probable_disease)
+        doctors_id = self.get_the_doctor_id(selected_doctor)
+        self.patient_details.append(doctors_id)
+        patient_id = self.patient_details[0]
+        patient_name = self.patient_details[1]
+        patient_age = self.patient_details[2]
+        patient_gender = self.patient_details[3]
+        patient_email = self.patient_details[4]
+        patient_phone_number = self.patient_details[5]
+        patient_address = self.patient_details[6]
+        probable_disease = self.patient_details[7]
+        assigned_doctor = self.patient_details[8]
+        sql_command = "INSERT INTO patients (id, name, age, gender, email, phone, address, probable_disease, " \
+                      "assigned_doctor) VALUES ('{}', '{}', '{}', '{}', '{}','{}', '{}', '{}', '{}');".format(
+                        patient_id, patient_name, patient_age, patient_gender, patient_email, patient_phone_number,
+                        patient_address, probable_disease, assigned_doctor)
+        print(sql_command)
+
+    def get_the_doctor_id(self, selected_doctor):
+        conn = sqlite3.connect('PSS.db')
+        cursor = conn.cursor()
+        sql_command = "SELECT id FROM doctors WHERE name = '" + selected_doctor + "';"
+        # Get the query results as a list of rows
+        doctors_id = cursor.execute(sql_command).fetchall()
+        doctors_id = str(doctors_id)
+        conn.commit()
+        conn.close()
+        result = ""
+        for char in doctors_id:
+            if char.isdigit():
+                result += char
+        return str(result)
 
 
 if __name__ == '__main__':
