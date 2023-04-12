@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedLayout, \
-    QTableWidget, QTableWidgetItem, QLineEdit
+    QTableWidget, QTableWidgetItem, QLineEdit, QTabWidget
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QRadioButton, QPushButton, \
     QScrollArea, QGroupBox, QMessageBox
@@ -184,95 +184,74 @@ class PatientSupportSystem(QWidget):
             'Gastroenterology',
             'Nutrition and weight management'
         ]
-
-        self.setWindowTitle('Patient Support System')
-        # Calculate the size and position of the window
-        screen = QGuiApplication.primaryScreen()
-        screen_rect = screen.geometry()
-        width = int(screen_rect.width() * 0.6)
-        height = int(width / 16 * 9)
-        x = int((screen_rect.width() - width) / 2)
-        y = int((screen_rect.height() - height) / 2)
-
-        # Set the size and position of the window
-        self.setGeometry(x, y, width, height)
-
-        # Create stacked layout
-        self.stacked_layout = QStackedLayout()
-        # Create pages for stacked layout
-        self.patient_form_page = QWidget()
-        self.questions_page = QWidget()
-        self.suggestions_page = QWidget()
-        self.prescriptions_page = QWidget()
-
-        # Create widgets for page 1
-        self.label1 = QLabel("This is page 1")
-        self.next_button1 = QPushButton("Next")
-        # Create labels and text entry boxes
-        self.nameLabel = QLabel('Name:')
-        self.nameLineEdit = QLineEdit()
-
-        self.ageLabel = QLabel('Age:')
-        self.ageLineEdit = QLineEdit()
-
-        self.genderLabel = QLabel('Gender:')
-        self.genderLineEdit = QLineEdit()
-
-        self.emailLabel = QLabel('Email:')
-        self.emailLineEdit = QLineEdit()
-
-        self.phoneLabel = QLabel('Phone No:')
-        self.phoneLineEdit = QLineEdit()
-
-        self.addressLabel = QLabel('Address:')
-        self.addressLineEdit = QLineEdit()
-
-        # Create layout for page 1
-        patient_form_layout = QVBoxLayout()
-        patient_form_layout.addWidget(self.label1)
-        patient_form_layout.addWidget(self.nameLabel)
-        patient_form_layout.addWidget(self.nameLineEdit)
-        patient_form_layout.addWidget(self.ageLabel)
-        patient_form_layout.addWidget(self.ageLineEdit)
-        patient_form_layout.addWidget(self.genderLabel)
-        patient_form_layout.addWidget(self.genderLineEdit)
-        patient_form_layout.addWidget(self.emailLabel)
-        patient_form_layout.addWidget(self.emailLineEdit)
-        patient_form_layout.addWidget(self.phoneLabel)
-        patient_form_layout.addWidget(self.phoneLineEdit)
-        patient_form_layout.addWidget(self.addressLabel)
-        patient_form_layout.addWidget(self.addressLineEdit)
-        patient_form_layout.addWidget(self.next_button1)
-        self.patient_form_page.setLayout(patient_form_layout)
-
-        # Connect next button 1 to switch to page 2
-        self.next_button1.clicked.connect(self.on_next_button_clicked)
-
-        # Create widgets for page 2
-        self.label2 = QLabel("Please Answer the following questions: ")
-        self.submit_button = QPushButton("Submit")
-
-        # Create a scroll area widget and set its properties
-        scroll = QScrollArea(self)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(True)
-
-        # Create layout for page 2
-        form = QWidget(scroll)
-        scroll_layout = QVBoxLayout(form)
-        page2_layout = QVBoxLayout()
-        scroll.setWidget(form)
-        page2_layout.addWidget(self.label2)
-        page2_layout.addWidget(scroll, 1)
-        page2_layout.addWidget(self.submit_button)
-        self.questions_page.setLayout(page2_layout)
-
-        # Create an empty list to store the radio buttons
         self.radio_buttons_questions = []
         self.radio_buttons_doctors = []
-        ct = 0
 
+        self.set_window_properties()
+        self.create_pages()
+        self.create_widgets_for_patient_form_page()
+        self.create_layout_for_patient_page()
+        scroll = self.create_widgets_for_questions_page()
+        scroll_layout = self.create_layout_for_questions_page(scroll)
+        self.create_widgets_for_suggestions_page()
+        self.create_layout_for_suggestions_page()
+        self.display_the_questions(scroll_layout)
+        self.create_widgets_for_tables_page()
+        self.create_layout_for_tables_page()
+        self.connect_all_buttons()
+        self.set_main_layout()
+
+    def set_main_layout(self):
+        # Add pages to stacked layout
+        self.stacked_layout.addWidget(self.patient_form_page)
+        self.stacked_layout.addWidget(self.questions_page)
+        self.stacked_layout.addWidget(self.suggestions_page)
+        self.stacked_layout.addWidget(self.tables_page)
+        # Set layout for widget
+        self.setLayout(self.stacked_layout)
+
+    def connect_all_buttons(self):
+        # connect all the buttons
+        self.next_button.clicked.connect(self.on_next_button_clicked)
+        self.submit_button.clicked.connect(self.on_submit_button_clicked)
+        self.choose_button.clicked.connect(self.on_choose_button_clicked)
+        self.close_button.clicked.connect(self.close)
+
+    def create_layout_for_tables_page(self):
+        # Create layout for tables page
+        self.tables_page_layout = QVBoxLayout()
+        self.tables_page_layout.addWidget(self.tab_widget)
+        self.tables_page_layout.addWidget(self.close_button)
+        self.tables_page.setLayout(self.tables_page_layout)
+
+    def create_widgets_for_tables_page(self):
+        # Create a QTabWidget to hold the tabs
+        self.tab_widget = QTabWidget(self)
+        # Create the Doctors tab and add a QTableWidget to it
+        doctors_tab = QWidget()
+        doctors_table = QTableWidget()
+        doctors_tab_layout = QVBoxLayout()
+        doctors_tab_layout.addWidget(doctors_table)
+        doctors_tab.setLayout(doctors_tab_layout)
+        self.tab_widget.addTab(doctors_tab, 'Doctors')
+        # Create the Patients tab and add a QTableWidget to it
+        patients_tab = QWidget()
+        patients_table = QTableWidget()
+        patients_tab_layout = QVBoxLayout()
+        patients_tab_layout.addWidget(patients_table)
+        patients_tab.setLayout(patients_tab_layout)
+        self.tab_widget.addTab(patients_tab, 'Patients')
+        # Create the Prescriptions tab and add a QTableWidget to it
+        prescriptions_tab = QWidget()
+        prescriptions_table = QTableWidget()
+        prescriptions_tab_layout = QVBoxLayout()
+        prescriptions_tab_layout.addWidget(prescriptions_table)
+        prescriptions_tab.setLayout(prescriptions_tab_layout)
+        self.tab_widget.addTab(prescriptions_tab, 'Prescriptions')
+        self.close_button = QPushButton("Close")
+
+    def display_the_questions(self, scroll_layout):
+        ct = 0
         for question in self.questions:
             group_box = QGroupBox(question['question'])
             group_box_layout = QVBoxLayout()
@@ -290,35 +269,100 @@ class PatientSupportSystem(QWidget):
             group_box.setLayout(group_box_layout)
             scroll_layout.addWidget(group_box)
 
-        # Connect next button 2 to switch to page 3
-        self.submit_button.clicked.connect(self.on_submit_button_clicked)
-
-        # Create widgets for page 3
-        self.label3 = QLabel("This is page 3")
-        self.choose_doctor_label = QLabel("Choose a doctor you want to visit: ")
-        self.choose_button = QPushButton("Choose")
-        self.table_widget = QTableWidget()
-
-        scroll_layout_for_doctors = QVBoxLayout(form)
-
-        # Create layout for page 3
+    def create_layout_for_suggestions_page(self):
+        # Create layout for suggestions page
         self.table_page_layout = QVBoxLayout()
         self.table_page_layout.addWidget(self.label3)
         self.table_page_layout.addWidget(self.table_widget)
         self.table_page_layout.addWidget(self.choose_doctor_label)
         self.suggestions_page.setLayout(self.table_page_layout)
 
-        # Connect close button to close the application
-        self.choose_button.clicked.connect(self.on_choose_button_clicked)
+    def create_widgets_for_suggestions_page(self):
+        # Create widgets for suggestions page
+        self.label3 = QLabel("These doctors are available: ")
+        self.choose_doctor_label = QLabel("Choose a doctor you want to visit: ")
+        self.choose_button = QPushButton("Choose")
+        self.table_widget = QTableWidget()
 
-        # Add pages to stacked layout
-        self.stacked_layout.addWidget(self.patient_form_page)
-        self.stacked_layout.addWidget(self.questions_page)
-        self.stacked_layout.addWidget(self.suggestions_page)
-        self.stacked_layout.addWidget(self.prescriptions_page)
+    def create_layout_for_questions_page(self, scroll):
+        # Create layout for questions page
+        form = QWidget(scroll)
+        scroll_layout = QVBoxLayout(form)
+        page2_layout = QVBoxLayout()
+        scroll.setWidget(form)
+        page2_layout.addWidget(self.label2)
+        page2_layout.addWidget(scroll, 1)
+        page2_layout.addWidget(self.submit_button)
+        self.questions_page.setLayout(page2_layout)
+        return scroll_layout
 
-        # Set layout for widget
-        self.setLayout(self.stacked_layout)
+    def create_widgets_for_questions_page(self):
+        # Create widgets for questions page
+        self.label2 = QLabel("Please Answer the following questions: ")
+        self.submit_button = QPushButton("Submit")
+        # Create a scroll area widget and set its properties
+        scroll = QScrollArea(self)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidgetResizable(True)
+        return scroll
+
+    def create_layout_for_patient_page(self):
+        # Create layout for patient form page
+        patient_form_layout = QVBoxLayout()
+        patient_form_layout.addWidget(self.label1)
+        patient_form_layout.addWidget(self.nameLabel)
+        patient_form_layout.addWidget(self.nameLineEdit)
+        patient_form_layout.addWidget(self.ageLabel)
+        patient_form_layout.addWidget(self.ageLineEdit)
+        patient_form_layout.addWidget(self.genderLabel)
+        patient_form_layout.addWidget(self.genderLineEdit)
+        patient_form_layout.addWidget(self.emailLabel)
+        patient_form_layout.addWidget(self.emailLineEdit)
+        patient_form_layout.addWidget(self.phoneLabel)
+        patient_form_layout.addWidget(self.phoneLineEdit)
+        patient_form_layout.addWidget(self.addressLabel)
+        patient_form_layout.addWidget(self.addressLineEdit)
+        patient_form_layout.addWidget(self.next_button)
+        self.patient_form_page.setLayout(patient_form_layout)
+
+    def create_widgets_for_patient_form_page(self):
+        # Create widgets for patient form page
+        self.label1 = QLabel("Please fill up the following form: ")
+        self.next_button = QPushButton("Next")
+        self.nameLabel = QLabel('Name:')
+        self.nameLineEdit = QLineEdit()
+        self.ageLabel = QLabel('Age:')
+        self.ageLineEdit = QLineEdit()
+        self.genderLabel = QLabel('Gender:')
+        self.genderLineEdit = QLineEdit()
+        self.emailLabel = QLabel('Email:')
+        self.emailLineEdit = QLineEdit()
+        self.phoneLabel = QLabel('Phone No:')
+        self.phoneLineEdit = QLineEdit()
+        self.addressLabel = QLabel('Address:')
+        self.addressLineEdit = QLineEdit()
+
+    def create_pages(self):
+        # Create stacked layout
+        self.stacked_layout = QStackedLayout()
+        # Create pages for stacked layout
+        self.patient_form_page = QWidget()
+        self.questions_page = QWidget()
+        self.suggestions_page = QWidget()
+        self.tables_page = QWidget()
+
+    def set_window_properties(self):
+        self.setWindowTitle('Patient Support System')
+        # Calculate the size and position of the window
+        screen = QGuiApplication.primaryScreen()
+        screen_rect = screen.geometry()
+        width = int(screen_rect.width() * 0.6)
+        height = int(width / 16 * 9)
+        x = int((screen_rect.width() - width) / 2)
+        y = int((screen_rect.height() - height) / 2)
+        # Set the size and position of the window
+        self.setGeometry(x, y, width, height)
 
     def get_selected_answers(self):
         answers = []
