@@ -232,23 +232,23 @@ class PatientSupportSystem(QWidget):
         self.tab_widget = QTabWidget(self)
         # Create the Doctors tab and add a QTableWidget to it
         doctors_tab = QWidget()
-        doctors_table = QTableWidget()
+        self.doctors_table = QTableWidget()
         doctors_tab_layout = QVBoxLayout()
-        doctors_tab_layout.addWidget(doctors_table)
+        doctors_tab_layout.addWidget(self.doctors_table)
         doctors_tab.setLayout(doctors_tab_layout)
         self.tab_widget.addTab(doctors_tab, 'Doctors')
         # Create the Patients tab and add a QTableWidget to it
         patients_tab = QWidget()
-        patients_table = QTableWidget()
+        self.patients_table = QTableWidget()
         patients_tab_layout = QVBoxLayout()
-        patients_tab_layout.addWidget(patients_table)
+        patients_tab_layout.addWidget(self.patients_table)
         patients_tab.setLayout(patients_tab_layout)
         self.tab_widget.addTab(patients_tab, 'Patients')
         # Create the Prescriptions tab and add a QTableWidget to it
         prescriptions_tab = QWidget()
-        prescriptions_table = QTableWidget()
+        self.prescriptions_table = QTableWidget()
         prescriptions_tab_layout = QVBoxLayout()
-        prescriptions_tab_layout.addWidget(prescriptions_table)
+        prescriptions_tab_layout.addWidget(self.prescriptions_table)
         prescriptions_tab.setLayout(prescriptions_tab_layout)
         self.tab_widget.addTab(prescriptions_tab, 'Prescriptions')
         self.close_button = QPushButton("Close")
@@ -463,14 +463,97 @@ class PatientSupportSystem(QWidget):
         if selected_doctor is None:
             show_message("Please choose a Doctor!")
             return
-
-        # add patient to the patient table
         self.add_patient_to_the_database(selected_doctor)
-        # add prescription to the patient table
         self.add_prescription_to_the_table()
+        self.prescription_label.setText(f"Prescription: \n{self.prescription_text}")
+
+        self.show_doctors_table()
+        self.show_patients_table()
+        self.show_prescription_table()
         # show all 3 table
         # show the prescription text
         self.stacked_layout.setCurrentIndex(3)
+
+    def show_doctors_table(self):
+        conn = sqlite3.connect('PSS.db')
+        cursor = conn.cursor()
+        sql_command = "SELECT * FROM doctors;"
+        # Get the query results as a list of rows
+        rows = cursor.execute(sql_command).fetchall()
+        conn.commit()
+        conn.close()
+        # Set the number of rows and columns in the table
+        self.doctors_table.setRowCount(len(rows))
+        self.doctors_table.setColumnCount(len(rows[0]))
+        # Set the column headers
+        headers = [description[0] for description in cursor.description]
+        self.doctors_table.setHorizontalHeaderLabels(headers)
+        # Populate the table with the query results
+        for i, row in enumerate(rows):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem(str(value))
+                self.doctors_table.setItem(i, j, item)
+        # Resize columns and rows to fit the contents
+        self.doctors_table.resizeColumnsToContents()
+        self.doctors_table.resizeRowsToContents()
+        # Show the table widget
+        self.doctors_table.show()
+
+    def show_patients_table(self):
+        conn = sqlite3.connect('PSS.db')
+        cursor = conn.cursor()
+        sql_command = "SELECT * FROM patients;"
+        # Get the query results as a list of rows
+        rows = cursor.execute(sql_command).fetchall()
+        conn.commit()
+        conn.close()
+        if len(rows) == 0:
+            return
+        # Set the number of rows and columns in the table
+        self.patients_table.setRowCount(len(rows))
+        self.patients_table.setColumnCount(len(rows[0]))
+        # Set the column headers
+        headers = [description[0] for description in cursor.description]
+        self.patients_table.setHorizontalHeaderLabels(headers)
+        # Populate the table with the query results
+
+        for i, row in enumerate(rows):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem(str(value))
+                self.patients_table.setItem(i, j, item)
+        # Resize columns and rows to fit the contents
+        self.patients_table.resizeColumnsToContents()
+        self.patients_table.resizeRowsToContents()
+        # Show the table widget
+        self.patients_table.show()
+
+    def show_prescription_table(self):
+        conn = sqlite3.connect('PSS.db')
+        cursor = conn.cursor()
+        sql_command = "SELECT * FROM prescriptions;"
+        # Get the query results as a list of rows
+        rows = cursor.execute(sql_command).fetchall()
+        conn.commit()
+        conn.close()
+        if len(rows) == 0:
+            return
+        # Set the number of rows and columns in the table
+        self.prescriptions_table.setRowCount(len(rows))
+        self.prescriptions_table.setColumnCount(len(rows[0]))
+        # Set the column headers
+        headers = [description[0] for description in cursor.description]
+        self.prescriptions_table.setHorizontalHeaderLabels(headers)
+        # Populate the table with the query results
+
+        for i, row in enumerate(rows):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem(str(value))
+                self.prescriptions_table.setItem(i, j, item)
+        # Resize columns and rows to fit the contents
+        self.prescriptions_table.resizeColumnsToContents()
+        self.prescriptions_table.resizeRowsToContents()
+        # Show the table widget
+        self.prescriptions_table.show()
 
     def add_prescription_to_the_table(self):
         prescriptions = {
@@ -492,17 +575,17 @@ class PatientSupportSystem(QWidget):
         doctor_id = self.patient_details[8]
         prescription_id = patient_id + doctor_id
         probable_disease = self.patient_details[7]
-        prescription_text = prescriptions[probable_disease]
+        self.prescription_text = prescriptions[probable_disease]
         now = datetime.now()
         date_prescribed = now.strftime("%Y-%m-%d")
         # connect to the database and create a cursor object
-        conn = sqlite3.connect('your_database_name.db')
+        conn = sqlite3.connect('PSS.db')
         cursor = conn.cursor()
 
         # insert the values into the prescription table
         sql_command = f"INSERT INTO prescriptions (id, patient_id, doctor_id, prescription_text, date_prescribed) " \
-                      f"VALUES ({prescription_id}, {patient_id}, {doctor_id}, '{prescription_text}', '{date_prescribed}');"
-        # cursor.execute(sql_command)
+                      f"VALUES ({prescription_id}, {patient_id}, {doctor_id}, '{self.prescription_text}', '{date_prescribed}');"
+        cursor.execute(sql_command)
         print(sql_command)
         conn.commit()
         conn.close()
@@ -525,9 +608,9 @@ class PatientSupportSystem(QWidget):
                       "assigned_doctor) VALUES ('{}', '{}', '{}', '{}', '{}','{}', '{}', '{}', '{}');".format(
             patient_id, patient_name, patient_age, patient_gender, patient_email, patient_phone_number,
             patient_address, probable_disease, assigned_doctor)
-        conn = sqlite3.connect('your_database_name.db')
+        conn = sqlite3.connect('PSS.db')
         cursor = conn.cursor()
-        # cursor.execute(sql_command)
+        cursor.execute(sql_command)
         conn.commit()
         conn.close()
         print(sql_command)
