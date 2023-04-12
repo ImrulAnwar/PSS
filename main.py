@@ -217,6 +217,7 @@ class PatientSupportSystem(QWidget):
         self.submit_button.clicked.connect(self.on_submit_button_clicked)
         self.choose_button.clicked.connect(self.on_choose_button_clicked)
         self.close_button.clicked.connect(self.close)
+        self.execute_button.clicked.connect(self.on_execute_button_clicked)
 
     def create_layout_for_tables_page(self):
         # Create layout for tables page
@@ -252,6 +253,20 @@ class PatientSupportSystem(QWidget):
         prescriptions_tab.setLayout(prescriptions_tab_layout)
         self.tab_widget.addTab(prescriptions_tab, 'Prescriptions')
         self.close_button = QPushButton("Close")
+        # Create the Execute SQL tab
+        execute_sql_tab = QWidget()
+        self.execute_sql_table = QTableWidget()
+        execute_sql_tab_layout = QVBoxLayout()
+        self.sql_query_label = QLabel('Enter your query: ')
+        self.sql_query_line_edit = QLineEdit()
+        self.execute_button = QPushButton("Execute!")
+        execute_sql_tab_layout.addWidget(self.sql_query_label)
+        execute_sql_tab_layout.addWidget(self.sql_query_line_edit)
+        execute_sql_tab_layout.addWidget(self.execute_button)
+        execute_sql_tab_layout.addWidget(self.execute_sql_table)
+        execute_sql_tab.setLayout(execute_sql_tab_layout)
+        self.tab_widget.addTab(execute_sql_tab, 'Execute SQL')
+
 
     def display_the_questions(self, scroll_layout):
         ct = 0
@@ -586,7 +601,6 @@ class PatientSupportSystem(QWidget):
         sql_command = f"INSERT INTO prescriptions (id, patient_id, doctor_id, prescription_text, date_prescribed) " \
                       f"VALUES ({prescription_id}, {patient_id}, {doctor_id}, '{self.prescription_text}', '{date_prescribed}');"
         cursor.execute(sql_command)
-        print(sql_command)
         conn.commit()
         conn.close()
 
@@ -613,7 +627,40 @@ class PatientSupportSystem(QWidget):
         cursor.execute(sql_command)
         conn.commit()
         conn.close()
-        print(sql_command)
+
+    def on_execute_button_clicked(self):
+        conn = sqlite3.connect('PSS.db')
+        try:
+            cursor = conn.cursor()
+            sql_command = self.sql_query_line_edit.text()
+            rows = cursor.execute(sql_command).fetchall()
+            self.show_the_table(rows, cursor)
+            conn.commit()
+            show_message("Query executed successfully!")
+        except Exception as e:
+            show_message("Please Enter a valid query!")
+        finally:
+            conn.close()
+
+    def show_the_table(self, rows, cursor):
+        if len(rows) == 0:
+            return
+        # Set the number of rows and columns in the table
+        self.execute_sql_table.setRowCount(len(rows))
+        self.execute_sql_table.setColumnCount(len(rows[0]))
+        # Set the column headers
+        headers = [description[0] for description in cursor.description]
+        self.execute_sql_table.setHorizontalHeaderLabels(headers)
+        # Populate the table with the query results
+        for i, row in enumerate(rows):
+            for j, value in enumerate(row):
+                item = QTableWidgetItem(str(value))
+                self.execute_sql_table.setItem(i, j, item)
+        # Resize columns and rows to fit the contents
+        self.execute_sql_table.resizeColumnsToContents()
+        self.execute_sql_table.resizeRowsToContents()
+        # Show the table widget
+        self.execute_sql_table.show()
 
     def get_the_doctor_id(self, selected_doctor):
         conn = sqlite3.connect('PSS.db')
