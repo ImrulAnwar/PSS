@@ -461,6 +461,12 @@ class PatientSupportSystem(QWidget):
         self.stacked_layout.setCurrentIndex(2)
 
     def on_next_button_clicked(self):
+        # Check if any of the line edits are empty
+        for line_edit in [self.phoneLineEdit, self.nameLineEdit, self.ageLineEdit,
+                          self.genderLineEdit, self.emailLineEdit, self.phoneLineEdit, self.addressLineEdit]:
+            if line_edit.text().strip() == "":
+                show_message("Please fill in all fields!")
+                return
         self.stacked_layout.setCurrentIndex(1)
         # Retrieve the entries from the text boxes and store them in an array
         self.patient_details = [self.phoneLineEdit.text(), self.nameLineEdit.text(), self.ageLineEdit.text(),
