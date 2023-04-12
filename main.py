@@ -221,10 +221,12 @@ class PatientSupportSystem(QWidget):
         # Create layout for tables page
         self.tables_page_layout = QVBoxLayout()
         self.tables_page_layout.addWidget(self.tab_widget)
+        self.tables_page_layout.addWidget(self.prescription_label)
         self.tables_page_layout.addWidget(self.close_button)
         self.tables_page.setLayout(self.tables_page_layout)
 
     def create_widgets_for_tables_page(self):
+        self.prescription_label = QLabel("Prescription: \nYou should take medicine for ")
         # Create a QTabWidget to hold the tabs
         self.tab_widget = QTabWidget(self)
         # Create the Doctors tab and add a QTableWidget to it
@@ -448,9 +450,16 @@ class PatientSupportSystem(QWidget):
         self.patient_details = [self.phoneLineEdit.text(), self.nameLineEdit.text(), self.ageLineEdit.text(),
                                 self.genderLineEdit.text(), self.emailLineEdit.text(), self.phoneLineEdit.text(),
                                 self.addressLineEdit.text()]
-        print(self.patient_details)
 
     def on_choose_button_clicked(self):
+        # add patient id, probable disease, assigned doctor
+        # add that patient to the patient table
+        # generate an id for prescriptions table
+        # make the prescription text
+        # get to days date
+        # add that prescription to the table
+        # show all 3 table
+        # show the prescription text
         self.stacked_layout.setCurrentIndex(3)
 
 
